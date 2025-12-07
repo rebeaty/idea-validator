@@ -49,15 +49,33 @@ Each task gets a custom prompt explaining what we're looking for and listing spe
 
 ## Results
 
-Performance on balanced evaluation sets (50% valid, 50% invalid, n=200):
+**Key Result**: Combining Gemini and NVIDIA in an ensemble achieves AUC scores of 0.888–0.926 across all tasks, with >90% recall for detecting invalid responses.
 
-| Task | Gemini | NVIDIA | Perplexity | Best |
-|------|--------|--------|------------|------|
-| AUT | 0.82 | 0.82 | 0.66 | Tie |
-| DPT | **0.92** | 0.75 | 0.75 | Gemini |
-| META | 0.89 | **0.93** | 0.77 | NVIDIA |
+### Overall Performance (AUC)
+
+Evaluated on balanced datasets (50% valid, 50% invalid): AUT n=2000, DPT n=2000, META n=1560.
+
+| Task | Gemini | NVIDIA | Ensemble | Best |
+|------|--------|--------|----------|------|
+| AUT | 0.845 | 0.823 | **0.888** | Ensemble |
+| DPT | 0.906 | 0.773 | **0.926** | Ensemble |
+| META | 0.855 | **0.901** | 0.914 | NVIDIA |
+
+*Ensemble = normalized average of Gemini + NVIDIA scores.*
 
 **AUC interpretation**: 0.92 means if you randomly pick one valid and one invalid response, the scorer correctly ranks the valid one higher 92% of the time.
+
+### Key Findings
+
+1. **Task-specific prompts are essential.** Gemini with task-specific validity prompts (AUC 0.85–0.91) dramatically outperforms generic quality assessment (AUC ~0.76 in earlier experiments).
+
+2. **Different methods excel at different tasks.** Gemini is best for divergent thinking tasks (AUT, DPT), while NVIDIA excels at metaphor completion where fluency and coherence matter more.
+
+3. **Ensemble provides robust performance.** Combining Gemini + NVIDIA achieves 0.89–0.93 AUC across all tasks, better than either method alone.
+
+4. **Perplexity is unsuitable for invalid detection.** Invalid responses (misspellings, nonsense) have HIGH perplexity, while we need LOW scores for invalid. Perplexity is better suited for detecting generic/clichéd responses, not invalid ones.
+
+5. **Ground truth labels are noisy.** Many "false positives" are legitimately low-quality responses (primary uses instead of alternative uses, literal instead of figurative). The model may be more correct than human labels in ~50% of disagreement cases.
 
 ## Data
 
@@ -216,7 +234,8 @@ invalids/
 | v1 | Binary valid/invalid, generic prompt | 0.56 |
 | v2 | Task-specific binary prompts | 0.56 |
 | v3 | Native JSON schema with CoT | 0.58 |
-| **v4** | **1-5 quality scale, task-specific** | **0.89** |
+| v4 | 1-5 quality scale, task-specific | 0.89 |
+| **v5** | **Full-scale evaluation, ensemble scoring** | **0.914** |
 
 ## Intended Use
 
@@ -228,12 +247,18 @@ This tool is designed as a **data filter**, not a benchmark metric. The goal is 
 3. Exclude flagged responses from downstream analysis
 4. Optionally: manual review of borderline cases (`gemini_quality == 2-3`)
 
-## Next Steps
+## Recommendations
 
-- **Bias analysis**: Check whether detection rates differ systematically between human vs. AI-generated responses. If the filter disproportionately flags one group, it could skew benchmark comparisons.
-- **Extend to other tasks**: Apply to Scientific Creativity Task and Creative Writing (short story) once data is ready.
-- **Threshold calibration**: Current results use AUC (threshold-free). Production use needs calibrated thresholds per task.
-- **Ensemble scoring**: Combine Gemini + NVIDIA + Perplexity into a single score for improved coverage and robustness.
+**For production use:**
+- Use Gemini with threshold ≤2 as the primary filter for AUT and DPT tasks
+- Use NVIDIA reward model for metaphor completion, or ensemble everywhere
+- Accept ~15-30% filtering rate on "valid" data—many are legitimately low-effort
+- Drop perplexity from invalid detection (keep for creativity scoring if needed)
+
+**For future work:**
+- Conduct bias analysis comparing human vs. AI response quality distributions
+- Extend to additional creativity tasks (scientific creativity, short stories)
+- Consider manual review of edge cases to refine ground truth labels
 
 ## References
 
