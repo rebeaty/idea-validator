@@ -20,11 +20,11 @@ Manual review doesn't scale. This tool automates detection using a **Quality Tri
 
 ### The Quality Trio
 
-| Scorer | What It Measures | API | Best For |
-|--------|------------------|-----|----------|
-| **Gemini** | Task-appropriate quality (1-5) | Google | Overall validity judgment |
-| **NVIDIA** | Response helpfulness | NVIDIA | Detecting empty/unhelpful |
-| **Perplexity** | Text surprisingness | Local | Misspellings, nonsense |
+| Scorer | Model | What It Measures | Best For |
+|--------|-------|------------------|----------|
+| **Gemini** | `gemini-2.0-flash` | Task-appropriate quality (1-5) | Overall validity judgment |
+| **NVIDIA** | `llama-3.1-nemotron-70b-reward` | Response helpfulness | Detecting empty/unhelpful |
+| **Perplexity** | `GPT-2` (local) | Text surprisingness | Misspellings, nonsense |
 
 ### Why 1-5 Quality Scale?
 
